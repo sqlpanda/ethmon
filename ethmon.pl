@@ -61,7 +61,7 @@ sub _get_gpu_state {
 		}
 		else {
 			if ( $miner{$gpu}->{UTIL} < 90 ) {
-				_print("GPU $_: PID $miner{$gpu}->{PID} stopped or hang.");
+				_print("GPU $gpu: PID $miner{$gpu}->{PID} stopped or hang.");
 				$return{$gpu}= $miner{$gpu}->{PID};
 			}
 			else {
@@ -79,7 +79,7 @@ sub _kill_ethminer {
 	my $input = shift;
 	if ( $input > 0 ) {
 		_print("Killing $input ...");	
-		unless (kill 0, $input) {
+		unless (kill 'KILL', $input) {
   			_print("$input has gone away!");
 		}
 	}
@@ -95,7 +95,7 @@ sub _start_ethminer  {
 	my $cmd = "/opt/miners/ethminer/ethminer -F http://127.0.0.1:8080/$worker -U --dag-load-mode sequential --cl-global-work 8192 --farm-recheck 200 --cuda-parallel-hash 4 --cuda-devices $input 2>/var/run/miner.$input.output &";	
 	_print("start ethminer for $input ...");
 	exec($cmd ) or _print("fail to exec $!");
-	sleep 60;
+	sleep 10;
 	
 
 }

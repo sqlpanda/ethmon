@@ -28,27 +28,52 @@ else {
 
 sub _get_gpu_state {
 	my %return;
-	my $cmd = 'nvidia-smi pmon -c 1 |grep ethminer';
+	my $cmd = 'nvidia-smi pmon -c 1';
 	open (RUN,"$cmd|");
 	my @results = <RUN>;
+	@results = grep(!/^#/, @results);   
 	### @results
 	close(RUN);
+	my @ethminer = grep(/ethminer/, @results);
+	my @gpu = grep(/X/, @results);
+	my %miner;
+	my %gpu;
+	foreach ( @ethminer ) {
+		my @temps = split(/\s+/,$_);
+		### @temps
+		$miner{$temps[1]}->{PID}=$temps[2]; 
+		$miner{$temps[1]}->{UTIL}=$temps[4]; 
+	}
+	### %miner
+	foreach ( @gpu ) {
+		my @temps = split(/\s+/,$_);
+		### @temps
+		$gpu{$temps[1]}=$temps[2];
+	}
+
+	### %gpu 
 	# gpu     pid  type    sm   mem   enc   dec   command
 	#  0   26086     C    99   100     0     0   ethminer
-	foreach (@results) {
-		my @temps = split(/\s+/,$_);
-		#print "$_\n";
-		if ( $temps[4] < 90 ) {
-			_print("GPU $temps[1]: PID $temps[2] stopped.");
-			$return{$temps[0]}=$temps[1];
+	foreach my $gpu(keys %gpu) {
+		if ( ! $miner{$gpu}) {
+			_print("GPU $gpu is missing");
+			$return{$gpu}='-1';
 		}
 		else {
-			print "GPU $temps[1]: PID $temps[2] $temps[4] \n";
+			if ( $miner{$gpu}->{UTIL} < 90 ) {
+				_print("GPU $_: PID $miner{$gpu}->{PID} stopped or hang.");
+				$return{$gpu}= $miner{$gpu}->{PID};
+			}
+			else {
+				print "GPU $gpu: PID $miner{$gpu}->{PID} util $miner{$gpu}->{UTIL}% \n";
+			}
 		}
 		
 	}
 	return \%return;
 }
+
+
 
 sub _kill_ethminer {
 	my $input = shift;
@@ -99,3 +124,4 @@ sub _print {
 	print OUT "$timestamp: $input\n";
 	close(OUT);
 }
+

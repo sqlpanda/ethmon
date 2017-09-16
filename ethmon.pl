@@ -13,18 +13,18 @@ if ( scalar keys %bad_gpu  > 0 ) {
 	my $worker = _get_worker();
 	foreach my $gpu( keys %bad_gpu ) {
 		my $pid = $bad_gpu{$gpu};
-#		my $return = _kill_ethminer($pid);
-#		if ( $return ) {
-#			_start_ethminer ($gpu,$worker);
-#		}
+		my $return = _kill_ethminer($pid);
+		if ( $return ) {
+			_start_ethminer ($gpu,$worker);
+		}
 	}
 
 }
 else {
 	_print("All GPU are health.");
 }
-	_print('--------END---------');
 
+	_print('--------END---------');
 
 sub _get_gpu_state {
 	my %return;
@@ -54,9 +54,9 @@ sub _get_gpu_state {
 	### %gpu 
 	# gpu     pid  type    sm   mem   enc   dec   command
 	#  0   26086     C    99   100     0     0   ethminer
-	foreach my $gpu(keys %gpu) {
+	foreach my $gpu(sort keys %gpu) {
 		if ( ! $miner{$gpu}) {
-			_print("GPU $gpu is missing");
+			_print("GPU $gpu is missing ethminer process");
 			$return{$gpu}='-1';
 		}
 		else {
@@ -77,9 +77,14 @@ sub _get_gpu_state {
 
 sub _kill_ethminer {
 	my $input = shift;
-	_print("Killing $input ...");	
-	unless (kill 0, $input) {
-  		_print("$input has gone away!");
+	if ( $input > 0 ) {
+		_print("Killing $input ...");	
+		unless (kill 0, $input) {
+  			_print("$input has gone away!");
+		}
+	}
+	else {
+		print "SKIP $input ..\n";
 	}
 }
 
@@ -87,23 +92,17 @@ sub _kill_ethminer {
 sub _start_ethminer  {
 	my $input = shift;
 	my $worker = shift;
-	my $cmd = "/opt/miners/ethminer/ethminer -F http://127.0.0.1:8080/$worker -U --dag-load-mode sequential --cl-global-work 8192 --farm-recheck 200 --cuda-parallel-hash 4 --cuda-devices $input 2>/var/run/miner.$input.output";	
-
-	my $pid ;
-	if (  defined $pid ) {
-		_print("start ethminer for $input ...");
-		system "$cmd";
-	}	
-	elsif ( $pid = fork ) {
-		_print("ethminer($input) on pid $pid ...");
-		sleep 60;
-	}
+	my $cmd = "/opt/miners/ethminer/ethminer -F http://127.0.0.1:8080/$worker -U --dag-load-mode sequential --cl-global-work 8192 --farm-recheck 200 --cuda-parallel-hash 4 --cuda-devices $input 2>/var/run/miner.$input.output &";	
+	_print("start ethminer for $input ...");
+	exec($cmd ) or _print("fail to exec $!");
+	sleep 60;
+	
 
 }
 
 sub _get_worker {
 	my $c_host = hostname;
-	my $cmd = `grep loc local.conf |grep -v '#' |grep $c_host`;
+	my $cmd = `grep loc /home/ethos/local.conf |grep -v '#' |grep $c_host`;
 	my @temps = split(/\s+/,$cmd);
 	return $temps[1];
 }

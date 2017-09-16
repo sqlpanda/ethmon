@@ -13,10 +13,10 @@ if ( scalar keys %bad_gpu  > 0 ) {
 	my $worker = _get_worker();
 	foreach my $gpu( keys %bad_gpu ) {
 		my $pid = $bad_gpu{$gpu};
-		my $return = _kill_ethminer($pid);
-		if ( $return ) {
-			_start_ethminer ($gpu,$worker);
-		}
+#		my $return = _kill_ethminer($pid);
+#		if ( $return ) {
+#			_start_ethminer ($gpu,$worker);
+#		}
 	}
 
 }
@@ -39,8 +39,11 @@ sub _get_gpu_state {
 		my @temps = split(/\s+/,$_);
 		#print "$_\n";
 		if ( $temps[4] < 90 ) {
-			_print("GPU $temps[0]: PID $temps[0] stopped.");
+			_print("GPU $temps[1]: PID $temps[2] stopped.");
 			$return{$temps[0]}=$temps[1];
+		}
+		else {
+			print "GPU $temps[1]: PID $temps[2] $temps[4] \n";
 		}
 		
 	}

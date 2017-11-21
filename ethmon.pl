@@ -5,6 +5,7 @@ use strict;
 use warnings;
 
 my $log_file = '/tmp/ethmon.log';
+_print('--------------------');
 _print("ethmon starting ...");
 
 my $ref_bad_gpu= _get_gpu_state();
@@ -28,6 +29,7 @@ else {
 
 sub _get_gpu_state {
 	my %return;
+	# FIX ME, time out the command 
 	my $cmd = 'nvidia-smi pmon -c 1';
 	open (RUN,"$cmd|");
 	my @results = <RUN>;
@@ -43,6 +45,7 @@ sub _get_gpu_state {
 		### @temps
 		$miner{$temps[1]}->{PID}=$temps[2]; 
 		$miner{$temps[1]}->{UTIL}=$temps[4]; 
+		$miner{$temps[1]}->{MEM}=$temps[5]; 
 	}
 	### %miner
 	foreach ( @gpu ) {
@@ -61,11 +64,15 @@ sub _get_gpu_state {
 		}
 		else {
 			if ( $miner{$gpu}->{UTIL} < 90 ) {
-				_print("GPU $gpu: PID $miner{$gpu}->{PID} stopped or hang.");
+				_print("GPU $gpu: PID $miner{$gpu}->{PID} stopped or hang($miner{$gpu}->{UTIL})");
+				$return{$gpu}= $miner{$gpu}->{PID};
+			}
+			elsif ( $miner{$gpu}->{MEM} < 90) {
+				_print("GPU $gpu: PID $miner{$gpu}->{PID} stopped or hang($miner{$gpu}->{MEM}) . Memory STOP");
 				$return{$gpu}= $miner{$gpu}->{PID};
 			}
 			else {
-				print "GPU $gpu: PID $miner{$gpu}->{PID} util $miner{$gpu}->{UTIL}% \n";
+				print "GPU $gpu: PID $miner{$gpu}->{PID} util $miner{$gpu}->{UTIL}% ,MEM $miner{$gpu}->{MEM} \n";
 			}
 		}
 		
@@ -81,6 +88,7 @@ sub _kill_ethminer {
 		_print("Killing $input ...");	
 		unless (kill 'KILL', $input) {
   			_print("$input has gone away!");
+			return 1; 
 		}
 	}
 	else {
@@ -94,6 +102,7 @@ sub _start_ethminer  {
 	my $worker = shift;
 	my $cmd = "/opt/miners/ethminer/ethminer -F http://127.0.0.1:8080/$worker -U --dag-load-mode sequential --cl-global-work 8192 --farm-recheck 200 --cuda-parallel-hash 4 --cuda-devices $input 2>/var/run/miner.$input.output &";	
 	_print("start ethminer for $input ...");
+	print "$cmd\n";
 	exec($cmd ) or _print("fail to exec $!");
 	sleep 10;
 	
@@ -104,7 +113,7 @@ sub _get_worker {
 	my $c_host = hostname;
 	my $cmd = `grep loc /home/ethos/local.conf |grep -v '#' |grep $c_host`;
 	my @temps = split(/\s+/,$cmd);
-	return $temps[1];
+	return $temps[-1];
 }
 
 sub getLoggingTime {

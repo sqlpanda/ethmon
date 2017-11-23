@@ -7,7 +7,8 @@ use warnings;
 
 my $dir = getcwd;
 my $xmr= '45pwYiBt5vvWm6KgsAkGkrZztC7NthMbEMMvgUGD6SitK7YDbPgFvJS2mNiW4Fx4Pb2oncinP92A1j7uVxHdjCmKHQpPjHH';
-my $xmr_pool = 'stratum+tcp://pool.supportxmr.com:7777';
+my $xmr_pool_gpu = 'stratum+tcp://pool.supportxmr.com:7777';
+my $xmr_pool_cpu = 'stratum+tcp://pool.supportxmr.com:3333';
 
 
 # `pwd`/ccminer -a cryptonight -o stratum+tcp://pool.supportxmr.com:7777 -u 45pwYiBt5vvWm6KgsAkGkrZztC7NthMbEMMvgUGD6SitK7YDbPgFvJS2mNiW4Fx4Pb2oncinP92A1j7uVxHdjCmKHQpPjHH -p pandaE1 -d 0
@@ -196,7 +197,7 @@ sub _start_gpuXMR  {
 	
 	my @gpus = @$ref_input;
 	my $gpu = join(',',@gpus);
-	my $cmd = "/opt/miners/ccminer/ccminer -a cryptonight -o $xmr_pool -u $xmr -p $worker -d $gpu 2>/tmp/miner.xmr.output 2>&1";	
+	my $cmd = "/opt/miners/ccminer/ccminer -a cryptonight -o $xmr_pool_gpu -u $xmr -p $worker -d $gpu 2>/tmp/miner.xmr.output 2>&1";	
 	_print("start GPU Miner XMR for $gpu ...");
 	print "$cmd\n";
 	system("$cmd &") or _print("fail to exec $!");
@@ -249,7 +250,7 @@ sub _check_cpu_miner {
 
 sub _start_cpu_miner {
         #my $cmd = "$dir/cpuminer/minerd -a cryptonight -o $xmr_pool -u $xmr.$cpu_worker -p x &";
-        my $cmd = "$dir/minerd -a cryptonight -o $xmr_pool -u $xmr.$cpu_worker -p x &";
+        my $cmd = "$dir/minerd -a cryptonight -o $xmr_pool_cpu -u $xmr.$cpu_worker -p x &";
         _print("start CPU miner for XMR ...");
         print "$cmd\n";
         exec($cmd ) or _print("fail to exec $!");

@@ -248,7 +248,8 @@ sub _check_cpu_miner {
 }
 
 sub _start_cpu_miner {
-        my $cmd = "$dir/cpuminer/minerd -a cryptonight -o $xmr_pool -u $xmr.$cpu_worker -p x &";
+        #my $cmd = "$dir/cpuminer/minerd -a cryptonight -o $xmr_pool -u $xmr.$cpu_worker -p x &";
+        my $cmd = "$dir/minerd -a cryptonight -o $xmr_pool -u $xmr.$cpu_worker -p x &";
         _print("start CPU miner for XMR ...");
         print "$cmd\n";
         exec($cmd ) or _print("fail to exec $!");
